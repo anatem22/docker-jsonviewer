@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <title>Json Viewer</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta http-equiv="Cache-Control" content="max-age=7200" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="all" />
+    <meta name="author" content="jsontest" />
+    <meta name="keywords" content="json"/>
+    <meta name="description" content="Json"/>
+    <link href="https://cdn.bootcss.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+    <link href="res/css/base.css" rel="stylesheet">
+    <style></style>
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+
+    <!-- Favicons -->
+</head>
+<body style="over-flow:hidden;">
+<header class="header">
+    <div class="row-fluid" >
+        <div class="col-md-5" style="position:relative;">
+            <a class="logo" href="/">JSON.<span style="color:#555;">Online.Viewer</span></a>
+        </div>
+        <nav class="col-md-7" style="padding:10px 0;"  align="right">
+            <div  class="navi">
+<!--               <a href="https://google.com" target="_blank" data-placement="bottom">JSON-editor</a>-->
+            </div>
+            
+        </nav>
+        <br style="clear:both;" />
+    </div>
+</header>
+
+<main class="row-fluid">
+    <div class="col-md-5" style="padding:0;">
+        <textarea id="json-src" placeholder="Enter json text here..."   class="form-control adapter_height"  style="height:550px;padding:20px;border:0;border-right:solid 1px #ddd;border-bottom:solid 1px #ddd;border-radius:0;resize: none; outline:none;"></textarea>
+    </div>
+    <div class="col-md-7" style="padding:0;">
+        <div style="padding:10px;font-size:16px;border-bottom:solid 1px #ddd;" class="navi">
+            <a href="#" class="tip zip" title="original"  data-placement="bottom"><i class="fa fa-database"></i></a>
+            <a href="#" class="tip clear" title="clear"  data-placement="bottom"><i class="fa fa-trash"></i></a>
+        </div>
+        <div id="json-target" class="adapter_height" style="height:510px;padding:20px;border-right:solid 1px #ddd;border-bottom:solid 1px #ddd;border-radius:0;resize: none;overflow-y:scroll; outline:none;">
+        </div>
+        <form id="form-save" method="POST"><input type="hidden" value="" id="txt-content" name="content"></form>
+    </div>
+    <br style="clear:both;" />
+</main>
+<script src="res/js/jquery.min.js"></script>
+<script src="res/js/jquery.message.js"></script>
+<script src="res/js/jquery.json.js"></script>
+<script src="res/js/json2.min.js"></script>
+<script src="res/js/jsonlint.min.js"></script>
+<script src="res/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+var current_json = '';
+var current_json_str = '';
+var xml_flag = false;
+var zip_flag = false;
+$('.tip').tooltip();
+function init(){
+    xml_flag = false;
+    zip_flag = false;
+    $('.xml').attr('style','color:#999;');
+    $('.zip').attr('style','color:#999;');
+}
+$('#json-src').keyup(function(){
+    init();
+    var content = $.trim($(this).val());
+    var result = '';
+    if (content!='') {
+        //xml,json
+        if (content.substr(0,1) === '<' && content.substr(-1,1) === '>') {
+            try{
+                var json_obj = $.xml2json(content);
+                content = JSON.stringify(json_obj);
+            }catch(e){
+                result = 'parse error：<span style="color: #f1592a;font-weight:bold;">' + e.message + '</span>';
+                current_json_str = result;
+                $('#json-target').html(result);
+                return false;
+            }
+
+        }
+        try{
+            current_json = jsonlint.parse(content);
+            current_json_str = JSON.stringify(current_json);
+            //current_json = JSON.parse(content);
+            result = new JSONFormat(content,4).toString();
+        }catch(e){
+            result = '<span style="color: #f1592a;font-weight:bold;">' + e + '</span>';
+            current_json_str = result;
+        }
+
+        $('#json-target').html(result);
+    }else{
+        $('#json-target').html('');
+    }
+
+});
+$('.xml').click(function(){
+    if (xml_flag) {
+        $('#json-src').keyup();
+    }else{
+        var result = $.json2xml(current_json);
+        $('#json-target').html('<textarea style="width:100%;height:100%;border:0;resize:none;">'+result+'</textarea>');
+        xml_flag = true;
+        $(this).attr('style','color:#15b374;');
+    }
+
+});
+$('.zip').click(function(){
+    if (zip_flag) {
+        $('#json-src').keyup();
+    }else{
+        $('#json-target').html(current_json_str);
+        zip_flag = true;
+        $(this).attr('style','color:#15b374;');
+    }
+
+});
+$('.clear').click(function(){
+     $('#json-src').val('');
+     $('#json-target').html('');
+});
+$('.save').click(function(){
+    var content = JSON.stringify(current_json);
+    $('#txt-content').val(content);
+    $("#form-save").submit();
+});
+$('#json-src').keyup();
+
+function getWinHeight() {
+    var winHeight = 0;
+    if (window.innerHeight)
+        winHeight = window.innerHeight;
+    else if ((document.body) && (document.body.clientHeight))
+        winHeight = document.body.clientHeight;
+    return winHeight;
+}
+$(window).resize(function() {
+    $('#json-src').css('height', getWinHeight() - 117);
+    $('#json-target').css('height', getWinHeight() - 160);
+});
+$(window).resize();
+</script>
+<footer style="padding:20px;text-align:center;color:#999;">©2021 <a target="_blank">Support</a> Online Tools
+</footer>
+</body>
+</html>
